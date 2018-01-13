@@ -355,7 +355,9 @@ trait TL
                 return $concat;
 
             case 'Object':
-                if (is_string($object)) return $object;
+                if (is_string($object)) {
+                    return $object;
+                }
         }
         $auto = false;
         if ((!is_array($object) || (isset($object['_']) && $this->constructors->find_by_predicate($object['_'])['type'] !== $type['type'])) && in_array($type['type'], ['User', 'InputUser', 'Chat', 'InputChannel', 'Peer', 'InputPeer'])) {

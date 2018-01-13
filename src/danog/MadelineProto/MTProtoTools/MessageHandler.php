@@ -39,9 +39,9 @@ trait MessageHandler
             $this->datacenter->sockets[$aargs['datacenter']]->send_message($message);
         } else {
             if (!empty($this->datacenter->sockets[$aargs['datacenter']]->ack_queue)) {
-                $this->datacenter->sockets[$aargs['datacenter']]->object_queue []= ['body' => $this->serialize_object(['type' => 'msgs_ack'], ['msg_ids' => $this->datacenter->sockets[$aargs['datacenter']]->ack_queue], 'msgs_ack'), 'content_related' => false, 'content' => 'ack'];
+                $this->datacenter->sockets[$aargs['datacenter']]->object_queue[] = ['body' => $this->serialize_object(['type' => 'msgs_ack'], ['msg_ids' => $this->datacenter->sockets[$aargs['datacenter']]->ack_queue], 'msgs_ack'), 'content_related' => false, 'content' => 'ack'];
             }
-            $this->datacenter->sockets[$aargs['datacenter']]->object_queue []= ['body' => $message_data, 'content_related' => $content_related];
+            $this->datacenter->sockets[$aargs['datacenter']]->object_queue[] = ['body' => $message_data, 'content_related' => $content_related];
             if (count($this->datacenter->sockets[$aargs['datacenter']]->object_queue) > 1) {
                 $messages = [];
                 foreach ($this->datacenter->sockets[$aargs['datacenter']]->object_queue as $message) {
@@ -80,6 +80,7 @@ trait MessageHandler
             }
             $this->datacenter->sockets[$aargs['datacenter']]->ack_queue = [];
         }
+
         return $message_id;
     }
 

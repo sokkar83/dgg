@@ -72,7 +72,6 @@ trait CallHandler
             $serialized = $this->serialize_method($method, $args);
         }
 
-
         $type = $this->methods->find_by_method($method)['type'];
         $content_related = $this->content_related($method);
 
@@ -83,8 +82,8 @@ trait CallHandler
             $serialized = $this->serialize_object(['type' => 'gzip_packed'], ['packed_data' => $gzipped], 'gzipped data');
             \danog\MadelineProto\Logger::log(['Using GZIP compression for '.$method.', saved '.($l - $g).' bytes of data, reduced call size by '.($g * 100 / $l).'%'], \danog\MadelineProto\Logger::VERBOSE);
         }
-        if ($this->datacenter->sockets[$aargs['datacenter']]->temp_auth_key !== NULL && $this->is_http($aargs['datacenter']) && $method !== 'http_wait') {
-            $this->datacenter->sockets[$aargs['datacenter']]->object_queue []= ['body' => $this->serialize_method('http_wait', ['max_wait' => 3000, 'wait_after' => 150, 'max_delay' => 500]), 'content_related' => false];
+        if ($this->datacenter->sockets[$aargs['datacenter']]->temp_auth_key !== null && $this->is_http($aargs['datacenter']) && $method !== 'http_wait') {
+            $this->datacenter->sockets[$aargs['datacenter']]->object_queue[] = ['body' => $this->serialize_method('http_wait', ['max_wait' => 3000, 'wait_after' => 150, 'max_delay' => 500]), 'content_related' => false];
         }
 
         $last_recv = $this->last_recv;
@@ -133,7 +132,6 @@ trait CallHandler
                                     $update_count++;
                                 }
                             }
-
                         } else {
                             $server_answer = $this->datacenter->sockets[$aargs['datacenter']]->incoming_messages[$this->datacenter->sockets[$aargs['datacenter']]->outgoing_messages[$message_id]['response']]['content'];
                             $this->datacenter->sockets[$aargs['datacenter']]->incoming_messages[$this->datacenter->sockets[$aargs['datacenter']]->outgoing_messages[$message_id]['response']]['content'] = '';
@@ -153,7 +151,6 @@ trait CallHandler
                             throw new \danog\MadelineProto\RPCErrorException($error, $error);
                         }
                         $only_updates = $this->handle_messages($aargs['datacenter']); // This method receives data from the socket, and parses stuff
-
                     } catch (\danog\MadelineProto\Exception $e) {
                         if ($e->getMessage() === 'I had to recreate the temporary authorization key') {
                             continue 2;
@@ -196,6 +193,7 @@ trait CallHandler
                                 $this->init_authorization();
                                 continue 3;
                         }
+
                         throw new \danog\MadelineProto\RPCErrorException('Received bad_msg_notification: '.self::BAD_MSG_ERROR_CODES[$server_answer['error_code']], $server_answer['error_code']);
                         break;
                     case 'boolTrue':

@@ -572,7 +572,9 @@ class MTProto
                 'requests' => true,  // Should I get info about unknown peers from PWRTelegram?
             ],
         ];
-        if ($settings === false) $settings = [];
+        if ($settings === false) {
+            $settings = [];
+        }
         $settings = array_replace_recursive($this->array_cast_recursive($default_settings, true), $this->array_cast_recursive($settings, true));
         if (isset(Lang::$lang[$settings['app_info']['lang_code']])) {
             Lang::$current_lang = &Lang::$lang[$settings['app_info']['lang_code']];
@@ -715,7 +717,9 @@ class MTProto
         $socket = $this->datacenter->sockets[$id];
         if ($this->authorized === self::LOGGED_IN && $socket->authorized === false) {
             foreach ($this->datacenter->sockets as $authorized_dc_id => $authorized_socket) {
-                if ($this->authorized_dc !== -1 && $authorized_dc_id !== $this->authorized_dc) continue;
+                if ($this->authorized_dc !== -1 && $authorized_dc_id !== $this->authorized_dc) {
+                    continue;
+                }
                 if ($authorized_socket->temp_auth_key !== null && $authorized_socket->auth_key !== null && $authorized_socket->authorized === true && $this->authorized === self::LOGGED_IN && $socket->authorized === false) {
                     try {
                         \danog\MadelineProto\Logger::log(['Trying to copy authorization from dc '.$authorized_dc_id.' to dc '.$id]);

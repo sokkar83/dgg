@@ -371,7 +371,6 @@ trait AuthKeyHandler
                             $res_authorization['auth_key'] = $auth_key_str;
                             $res_authorization['id'] = substr($auth_key_sha, -8);
 
-
                             \danog\MadelineProto\Logger::log(['Auth key generated'], \danog\MadelineProto\Logger::NOTICE);
 
                             return $res_authorization;
