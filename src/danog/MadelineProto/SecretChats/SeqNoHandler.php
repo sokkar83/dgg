@@ -55,7 +55,6 @@ trait SeqNoHandler
                 }
             }
         }
-        //var_dump($C, $seqno);
         if ($seqno < $C) { // <= C
             \danog\MadelineProto\Logger::log(['WARNING: dropping repeated message with seqno '.$seqno]);
 

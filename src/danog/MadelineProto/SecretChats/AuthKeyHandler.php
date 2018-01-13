@@ -24,9 +24,7 @@ trait AuthKeyHandler
 
     public function accept_secret_chat($params)
     {
-        //var_dump($params['id'],$this->secret_chat_status($params['id']));
         if ($this->secret_chat_status($params['id']) !== 0) {
-            //var_dump($this->secret_chat_status($params['id']));
             \danog\MadelineProto\Logger::log(["I've already accepted secret chat ".$params['id']]);
 
             return false;
@@ -37,7 +35,6 @@ trait AuthKeyHandler
         $params['g_a'] = new \phpseclib\Math\BigInteger($params['g_a'], 256);
         $this->check_G($params['g_a'], $dh_config['p']);
         $key = ['auth_key' => str_pad($params['g_a']->powMod($b, $dh_config['p'])->toBytes(), 256, chr(0), \STR_PAD_LEFT)];
-        //var_dump($key);
         $key['fingerprint'] = substr(sha1($key['auth_key'], true), -8);
         $key['visualization_orig'] = substr(sha1($key['auth_key'], true), 16);
         $key['visualization_46'] = substr(hash('sha256', $key['auth_key'], true), 20);
@@ -77,7 +74,6 @@ trait AuthKeyHandler
     public function complete_secret_chat($params)
     {
         if ($this->secret_chat_status($params['id']) !== 1) {
-            //var_dump($this->secret_chat_status($params['id']));
             \danog\MadelineProto\Logger::log(['Could not find and complete secret chat '.$params['id']]);
 
             return false;
@@ -88,7 +84,6 @@ trait AuthKeyHandler
         $key = ['auth_key' => str_pad($params['g_a_or_b']->powMod($this->temp_requested_secret_chats[$params['id']], $dh_config['p'])->toBytes(), 256, chr(0), \STR_PAD_LEFT)];
         unset($this->temp_requested_secret_chats[$params['id']]);
         $key['fingerprint'] = substr(sha1($key['auth_key'], true), -8);
-        //var_dump($key);
         if ($key['fingerprint'] !== $params['key_fingerprint']) {
             $this->discard_secret_chat($params['id']);
 
@@ -136,7 +131,6 @@ trait AuthKeyHandler
         if ($this->secret_chats[$chat]['rekeying'][0] !== 0) {
             $my_exchange_id = new \phpseclib\Math\BigInteger($this->secret_chats[$chat]['rekeying'][1], -256);
             $other_exchange_id = new \phpseclib\Math\BigInteger($params['exchange_id'], -256);
-            //var_dump($my, $params);
             if ($my_exchange_id > $other_exchange_id) {
                 return;
             }
@@ -241,7 +235,6 @@ trait AuthKeyHandler
     public function discard_secret_chat($chat)
     {
         \danog\MadelineProto\Logger::log(['Discarding secret chat '.$chat.'...'], \danog\MadelineProto\Logger::VERBOSE);
-        //var_dump(debug_backtrace(0)[0]);
         if (isset($this->secret_chats[$chat])) {
             unset($this->secret_chats[$chat]);
         }

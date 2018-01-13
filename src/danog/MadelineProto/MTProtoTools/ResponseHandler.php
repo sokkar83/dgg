@@ -78,6 +78,7 @@ trait ResponseHandler
                     unset($this->datacenter->sockets[$datacenter]->new_outgoing[$this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']['req_msg_id']]);
                     $this->ack_incoming_message_id($current_msg_id, $datacenter); // Acknowledge that I received the server's response
                     $this->ack_outgoing_message_id($this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']['req_msg_id'], $datacenter); // Acknowledge that the server received my request
+
                     $this->datacenter->sockets[$datacenter]->outgoing_messages[$this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']['req_msg_id']]['response'] = $current_msg_id;
                     $this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content'] = $this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']['result'];
                     $this->check_in_seq_no($datacenter, $current_msg_id);
@@ -91,14 +92,6 @@ trait ResponseHandler
                     $this->ack_outgoing_message_id($this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']['req_msg_id'], $datacenter); // Acknowledge that the server received my request
                     $this->datacenter->sockets[$datacenter]->outgoing_messages[$this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']['req_msg_id']]['response'] = $current_msg_id;
                     break;
-                /*
-                case 'rpc_error':
-                    $this->check_in_seq_no($datacenter, $current_msg_id);
-                    $only_updates = false;
-                    $aargs = ['datacenter' => &$datacenter];
-                    $this->handle_rpc_error($this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content'], $aargs);
-                    unset($aargs);
-                    break;*/
 
                 case 'bad_server_salt':
                 case 'bad_msg_notification':
@@ -124,6 +117,7 @@ trait ResponseHandler
                     $only_updates = false;
                     $this->datacenter->sockets[$datacenter]->temp_auth_key['server_salt'] = $this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]['content']['server_salt'];
                     unset($this->datacenter->sockets[$datacenter]->new_incoming[$current_msg_id]);
+                    //$this->close_and_reopen($datacenter);
                     $this->ack_incoming_message_id($current_msg_id, $datacenter); // Acknowledge that I received the server's response
                     if ($this->authorized === self::LOGGED_IN && !$this->initing_authorization && $this->datacenter->sockets[$this->datacenter->curdc]->temp_auth_key !== null) {
                         $this->get_updates_difference();
@@ -137,8 +131,8 @@ trait ResponseHandler
                         $this->datacenter->sockets[$datacenter]->incoming_messages[$message['msg_id']] = ['seq_no' => $message['seqno'], 'content' => $message['body']];
                         $this->datacenter->sockets[$datacenter]->new_incoming[$message['msg_id']] = $message['msg_id'];
 
-                        $this->handle_messages($datacenter);
                     }
+                    $this->handle_messages($datacenter);
                     $unset = true;
                     $this->check_in_seq_no($datacenter, $current_msg_id);
                     $only_updates = false;
@@ -300,7 +294,7 @@ trait ResponseHandler
                 }
             }
             if ($unset) {
-                unset($this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]);
+//                unset($this->datacenter->sockets[$datacenter]->incoming_messages[$current_msg_id]);
             }
         }
 
