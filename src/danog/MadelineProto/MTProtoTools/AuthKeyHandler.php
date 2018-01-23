@@ -370,11 +370,6 @@ trait AuthKeyHandler
                             $res_authorization['server_salt'] = substr($new_nonce, 0, 8 - 0) ^ substr($server_nonce, 0, 8 - 0);
                             $res_authorization['auth_key'] = $auth_key_str;
                             $res_authorization['id'] = substr($auth_key_sha, -8);
-                            /*
-                            if ($expires_in >= 0) { //check if permanent authorization
-                                $res_authorization['expires_in'] = $expires_in;
-                                $res_authorization['p_q_inner_data_temp'] = $p_q_inner_data;
-                            }*/
 
                             \danog\MadelineProto\Logger::log(['Auth key generated'], \danog\MadelineProto\Logger::NOTICE);
 
@@ -552,10 +547,6 @@ trait AuthKeyHandler
                 $res = $this->method_call('auth.bindTempAuthKey', ['perm_auth_key_id' => $perm_auth_key_id, 'nonce' => $nonce, 'expires_at' => $expires_at, 'encrypted_message' => $encrypted_message], ['message_id' => $message_id, 'datacenter' => $datacenter]);
                 if ($res === true) {
                     \danog\MadelineProto\Logger::log(['Successfully binded temporary and permanent authorization keys, DC '.$datacenter], \danog\MadelineProto\Logger::NOTICE);
-
-                    if ($this->is_http($datacenter)) {
-                        $this->close_and_reopen($datacenter);
-                    }
 
                     return true;
                 }

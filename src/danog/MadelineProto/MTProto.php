@@ -46,7 +46,7 @@ class MTProto
     /*
         const V = 71;
     */
-    const V = 87;
+    const V = 88;
 
     const NOT_LOGGED_IN = 0;
     const WAITING_CODE = 1;
@@ -162,6 +162,7 @@ class MTProto
     private $config = ['expires' => -1];
     public $authorization = null;
     public $authorized = 0;
+    public $authorized_dc = -1;
 
     private $rsa_keys = [];
     private $last_recv = 0;
@@ -258,7 +259,7 @@ class MTProto
 
     public function __sleep()
     {
-        return ['encrypted_layer', 'settings', 'config', 'authorization', 'authorized', 'rsa_keys', 'last_recv', 'dh_config', 'chats', 'last_stored', 'qres', 'pending_updates', 'updates_state', 'got_state', 'channels_state', 'updates', 'updates_key', 'full_chats', 'msg_ids', 'dialog_params', 'datacenter', 'v', 'constructors', 'td_constructors', 'methods', 'td_methods', 'td_descriptions', 'twoe1984', 'twoe2047', 'twoe2048', 'zero', 'one', 'two', 'three', 'four', 'temp_requested_secret_chats', 'temp_rekeyed_secret_chats', 'secret_chats', 'hook_url', 'storage', 'emojis'];
+        return ['encrypted_layer', 'settings', 'config', 'authorization', 'authorized', 'rsa_keys', 'last_recv', 'dh_config', 'chats', 'last_stored', 'qres', 'pending_updates', 'updates_state', 'got_state', 'channels_state', 'updates', 'updates_key', 'full_chats', 'msg_ids', 'dialog_params', 'datacenter', 'v', 'constructors', 'td_constructors', 'methods', 'td_methods', 'td_descriptions', 'twoe1984', 'twoe2047', 'twoe2048', 'zero', 'one', 'two', 'three', 'four', 'temp_requested_secret_chats', 'temp_rekeyed_secret_chats', 'secret_chats', 'hook_url', 'storage', 'emojis', 'authorized_dc'];
     }
 
     public function __wakeup()
@@ -571,6 +572,9 @@ class MTProto
                 'requests' => true,  // Should I get info about unknown peers from PWRTelegram?
             ],
         ];
+        if ($settings === false) {
+            $settings = [];
+        }
         $settings = array_replace_recursive($this->array_cast_recursive($default_settings, true), $this->array_cast_recursive($settings, true));
         if (isset(Lang::$lang[$settings['app_info']['lang_code']])) {
             Lang::$current_lang = &Lang::$lang[$settings['app_info']['lang_code']];
@@ -640,7 +644,7 @@ class MTProto
     {
         $this->datacenter->sockets[$datacenter]->close_and_reopen();
         if ($this->is_http($datacenter)) {
-            $this->method_call('http_wait', ['max_wait' => 0, 'wait_after' => 0, 'max_delay' => 0], ['datacenter' => $datacenter]);
+            $this->method_call('http_wait', ['max_wait' => 3000, 'wait_after' => 150, 'max_delay' => 500], ['datacenter' => $datacenter]);
         }
     }
 
@@ -666,6 +670,7 @@ class MTProto
     {
         $this->initing_authorization = true;
         $this->updates_state['sync_loading'] = true;
+        $this->postpone_updates = true;
 
         try {
             foreach ($this->datacenter->sockets as $id => $socket) {
@@ -689,6 +694,7 @@ class MTProto
                     if (!$cdn) {
                         $this->bind_temp_auth_key($this->settings['authorization']['default_temp_auth_key_expires_in'], $id);
                         $config = $this->write_client_info('help.getConfig', [], ['datacenter' => $id]);
+                        $this->method_call('ping', ['ping_id' => $this->random(8)], ['datacenter' => $id]);
                         $this->sync_authorization($id);
                         $this->get_config($config);
                     }
@@ -697,6 +703,7 @@ class MTProto
                 }
             }
         } finally {
+            $this->postpone_updates = false;
             $this->initing_authorization = false;
             $this->updates_state['sync_loading'] = false;
         }
@@ -710,10 +717,14 @@ class MTProto
         $socket = $this->datacenter->sockets[$id];
         if ($this->authorized === self::LOGGED_IN && $socket->authorized === false) {
             foreach ($this->datacenter->sockets as $authorized_dc_id => $authorized_socket) {
+                if ($this->authorized_dc !== -1 && $authorized_dc_id !== $this->authorized_dc) {
+                    continue;
+                }
                 if ($authorized_socket->temp_auth_key !== null && $authorized_socket->auth_key !== null && $authorized_socket->authorized === true && $this->authorized === self::LOGGED_IN && $socket->authorized === false) {
                     try {
                         \danog\MadelineProto\Logger::log(['Trying to copy authorization from dc '.$authorized_dc_id.' to dc '.$id]);
                         $exported_authorization = $this->method_call('auth.exportAuthorization', ['dc_id' => preg_replace('|_.*|', '', $id)], ['datacenter' => $authorized_dc_id]);
+                        $this->authorized_dc = $this->datacenter->curdc;
                         $authorization = $this->method_call('auth.importAuthorization', $exported_authorization, ['datacenter' => $id]);
                         $socket->authorized = true;
                         break;
